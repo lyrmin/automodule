@@ -25,6 +25,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import json
 from getpass import getpass
 from html.parser import HTMLParser
 from re import Match
@@ -35,19 +36,13 @@ from PIL import Image
 # Внешние
 from colorama import init, Fore
 
-# try:
-#     import pywin32
-#     print('test sys._MEIPASS')
-#     print(sys._MEIPASS)
-#     pywin32.SetDllDirectory(sys._MEIPASS)
-# except:
-#     print('test sys._MEIPASS ERROR')
 
 # Языковой класс
 class Lang:
     ARGS_DESCRIPTION = ''
     ARGS_ACTION = ''
     ARGS_VERSION = ''
+    ARGS_PATH = ''
     ARGS_DESCRIPTIONRU = ''
     ARGS_DESCRIPTIONEN = ''
     ARGS_USER = ''
@@ -129,6 +124,9 @@ class Lang:
     USER = ''
     PASSWORD = ''
     VERSION_ERROR = ''
+    CONFIG_PATH_ERROR = ''
+    CONFIG_FILE_FORMAT_ERROR = ''
+    CONFIG_PATH_NOT_EXIST_ERROR = ''
 
     forceEn = Fore.LIGHTYELLOW_EX + 'Use -f key to force replacement.' + Fore.RESET
     forceRu = Fore.LIGHTYELLOW_EX + 'Используйте параметр -f для принудительной замены.' + Fore.RESET
@@ -144,8 +142,12 @@ class Lang:
             "ru": 'Выберите действие: n — Создание нового модуля. m — Создание архива модуля .last_version.zip. u — Создание архива версии X.X.X.zip. M — Отправка .last_version.zip на marketplace. U — Отправка X.X.X.zip на marketplace.'
         },
         "ARGS_VERSION": {
-            "en": "Set version. Example 1.0.1. Update version.php file",
+            "en": "Specify the version. Example 1.0.1. Update version.php file",
             "ru": "Указать версию. Пример 1.0.1. Обновит файл version.php"
+        },
+        "ARGS_PATH": {
+            "en": 'Specify the path to the module\'s parent directory. Example: /var/www/local/modules',
+            "ru": 'Указать путь к родительской директории модуля. Пример: /var/www/local/modules'
         },
         "ARGS_DESCRIPTIONRU": {
             "en": "Set text for description.ru update archive. EOL = #.",
@@ -471,6 +473,18 @@ class Lang:
             "en": "Update version not specified in X.X.X format. " + Fore.LIGHTCYAN_EX + "Use -v to specify the version." + Fore.RESET,
             "ru": "Не указана версия обновления в формате X.X.X. " + Fore.LIGHTCYAN_EX + "Используйте -v для указания версии." + Fore.RESET
         },
+        "CONFIG_PATH_ERROR": {
+            "en": errorEn + ' the path: %s is incorrect in the configuration',
+            "ru": errorRu + ' в конфигурации не верно указан путь: %s'
+        },
+        "CONFIG_FILE_FORMAT_ERROR": {
+            "en": errorEn + ' invalid configuration file format: %s',
+            "ru": errorRu + ' не верный формат файла конфигурации: %s'
+        },
+        "CONFIG_PATH_NOT_EXIST_ERROR": {
+            "en": errorEn + ' the path: %s is not exists',
+            "ru": errorRu + ' путь: %s не существует.'
+        },
     }
 
     def __init__(self) -> None:
@@ -576,7 +590,7 @@ class BXMarketplacePageParser(HTMLParser):
 # Основной класс: АВТОМОДУЛЬ
 class AutoModule:
     base = "lyrmin.base"
-    currentDir = os.getcwd()
+    currentDir = os.path.abspath(os.path.dirname(__file__))
     encodeBase = 'utf-8'
     encode = 'cp1251'
     lastVersionDir = ".last_version"
@@ -587,7 +601,9 @@ class AutoModule:
     gitDir = '.git'
     cookieFile = 'cookie'
     session = None
-    header = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
+    header = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+    }
     resultCode = None
     resultValue = None
     resultText = None
@@ -635,6 +651,51 @@ class AutoModule:
         self.moduleNameSpaceDouble = self.module.title().replace('.', '\\\\')
 
         self.date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        self.getConfig(args)
+        if not self.currentDir == os.path.abspath(os.path.dirname(__file__)):
+            os.chdir(self.currentDir)
+
+    def getConfig(self, args) -> None:
+        configFile = 'config.json'
+        configPath = os.path.join(self.currentDir, configFile)
+
+        # Файл config.json не существует
+        if not os.path.exists(configPath):
+            config = {}
+        else:
+            with open(configFile, 'r', encoding=self.encodeBase) as f:
+                try:
+                    config = json.load(f)
+                    if self.partnerId in config:
+                        if self.moduleId in config[self.partnerId]:
+                            if 'currentDir' in config[self.partnerId][self.moduleId]:
+                                path = config[self.partnerId][self.moduleId]['currentDir']
+                                if os.path.exists(path):
+                                    self.currentDir = path
+                                else:
+                                    print(self.lang.CONFIG_PATH_ERROR % path)
+                                    exit()
+                except ValueError as error:
+                    print(self.lang.CONFIG_FILE_FORMAT_ERROR % error)
+                    exit()
+
+        # Сохранение файла config.json
+        if args.path:
+            if os.path.exists(args.path):
+                if self.partnerId not in config:
+                    config[self.partnerId] = {self.moduleId: {'currentDir': args.path}}
+                elif self.moduleId not in config[self.partnerId]:
+                    config[self.partnerId][self.moduleId] = {'currentDir': args.path}
+
+                if not self.currentDir == args.path:
+                    config[self.partnerId][self.moduleId]['currentDir'] = args.path
+                    with open(configFile, 'w', encoding=self.encodeBase) as f:
+                        json.dump(config, f, ensure_ascii=False, indent=4)
+                    self.currentDir = args.path
+            else:
+                print(self.lang.CONFIG_PATH_NOT_EXIST_ERROR % args.path)
+                exit()
 
     # Выбирает действие на основании параметра action
     def doAction(self) -> None:
@@ -1197,6 +1258,7 @@ class AutoModule:
         # Действия
         parser.add_argument('-a', '--action', choices=['n', 'm', 'u', 'M', 'U'], help=self.lang.ARGS_ACTION)
         # Параметры
+        parser.add_argument('-P', '--path', help=self.lang.ARGS_PATH)
         parser.add_argument('-v', '--version', help=self.lang.ARGS_VERSION)
         parser.add_argument('-d', '--descriptionru', help=self.lang.ARGS_DESCRIPTIONRU)
         parser.add_argument('-D', '--descriptionen', help=self.lang.ARGS_DESCRIPTIONEN)
