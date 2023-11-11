@@ -1,19 +1,6 @@
 #!/home/sdtd/tmp/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 
-# Установка python
-# https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-programming-environment-on-ubuntu-20-04-quickstart#step-4-install-additional-tools
-
-# pip freeze
-# python -m pip freeze > requirements.txt
-# pip install -r requirements.txt
-# pyinstaller --onefile automodule.py
-# python3.11 -m PyInstaller automodule.py --onefile
-# python3.11 -m PyInstaller automodule.py --onefile --add-binary '/home/sdtd/Python-3.11.3/libpython3.11.so.1.0:.'
-# pyinstaller automodule.py --onedir --clean --add-binary "C:\Program Files\Git\mingw64\bin\libcurl-4.dll;." --paths "C:\Program Files\Git\mingw64\bin\"
-# pyinstaller automodule.py --onefile --clean --noconfirm --paths "C:\Program Files\Git\mingw64\bin" --add-binary "C:\Program Files\Git\mingw64\bin\libcurl-4.dll;."
-# https://techmonger.github.io/82/pyinstaller-script-to-binary/
-
 import argparse
 import codecs
 import datetime
@@ -362,8 +349,8 @@ class Lang:
             "ru": "Редактирование версии."
         },
         "UPDATE_PUSH_SUCCESSFUL": {
-            "en": "The version has been successfully updated.",
-            "ru": "Версия успешно изменена."
+            "en": "The version has been successfully uploaded.",
+            "ru": "Версия успешно загружена."
         },
         "UPDATE_PUSH_ARCHIVE_NAME_ERROR": {
             "en": "Invalid archive name.",
@@ -1029,7 +1016,11 @@ class AutoModule:
                     'Файл(ы) в поле "Скриншоты" имеет(ют) неверное расширение': self.lang.MODULE_PUSH_IMG_EXT_ERROR,
                     'Решение с таким кодом уже существует.': self.lang.MODULE_PUSH_CODE_EXIST,
                     'В файле install/index.php не верно указан $MODULE_ID': self.lang.MODULE_PUSH_MODULE_ID,
-                    'В файле install/index.php не верно указано имя класса': self.lang.MODULE_PUSH_CLASS
+                    'В файле install/index.php не верно указано имя класса': self.lang.MODULE_PUSH_CLASS,
+                    'Укажите, что включает в себя решение.': 'Укажите, что включает в себя решение.',
+                    'Не заполнено обязательное поле "Скриншоты"': 'Не заполнено обязательное поле "Скриншоты"',
+                    'Укажите категории, к которым относится ваше решение.': 'Укажите категории, к которым относится ваше решение.',
+                    'Укажите редакции, с которыми совместимо ваше решение.': 'Укажите редакции, с которыми совместимо ваше решение.'
                 }
             }
             files.append(tuple(("update", (self.lastVersionFile, open(self.lastVersionFile, "rb")))))
@@ -1205,7 +1196,6 @@ class AutoModule:
                 return False
 
             if self.resultValue == 'Версия решения не найдена':
-                print(self.lang.ERROR % '', end='')
                 print(self.lang.UPDATE_PUSH_ADD)
                 html = self.loginByForm(urlNewVersion, user, password, check)
                 url = urlNewVersion
