@@ -17,7 +17,7 @@
 ### Установка Python
 https://www.python.org/downloads/
 
-windows 
+Windows: Установите в начале галочки - установка под админом и добавить python в PATH.
 
 *nix https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-programming-environment-on-ubuntu-20-04-quickstart#step-4-install-additional-tools
 
@@ -27,11 +27,9 @@ https://git-scm.com/downloads
 ### Запуск скрипта
 Рекомендуется скрипт использовать на персональном компьютере, а не на хостинге для простоты установки и настройки ПО.
 
-Для windows:
-Создайте директорию для скрипта. Например, C:\automodule.
-
-Выполните команды
-```shell
+Для windows выполните команды в консоли
+```cmd
+cd C:\
 git clone https://github.com/lyrmin/automodule.git
 cd automodule
 git config --global core.autocrlf false
