@@ -160,8 +160,8 @@ class Lang:
             "ru": "Сохранение лог файлов: module-auth.html, module-result.html, result-error.html для операций -a M или -a U."
         },
         "ARGS_EMAIL": {
-            "en": "Set email to your .git config file.",
-            "ru": "Установите email в файл конфигурации .git."
+            "en": "Set email in the .git configuration file. Only at the time of creating a new module.",
+            "ru": "Установите email в файл конфигурации .git. Только в момент создания нового модуля."
         },
         "ARGS_NAME": {
             "en": "Set name to your .git config file.",
