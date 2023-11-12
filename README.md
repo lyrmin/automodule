@@ -27,6 +27,8 @@ https://git-scm.com/downloads
 ### Запуск скрипта
 Рекомендуется скрипт использовать на персональном компьютере, а не на хостинге для простоты установки и настройки ПО.
 
+Важно: Замените lyrmin.test на ваш id модуля.
+
 Для windows выполните команды в консоли
 ```cmd
 cd C:\
@@ -38,8 +40,10 @@ python -m pip install -r requirements.txt
 python automodule.py -h -r
 python automodule.py -a n lyrmin.test
 start lyrmin.test
+python automodule.py -a m lyrmin.test
+python automodule.py -a M lyrmin.test
 ```
-
+Перейдите в список модулей https://partners.1c-bitrix.ru/personal/modules/modules.php и откройте добавленный. Теперь вы можете прописать все необходимые вам настройки.
 
    [mbx]: <https://marketplace.1c-bitrix.ru>
    [la]: <https://lyrmin.ru/automodule>
